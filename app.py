@@ -13,33 +13,7 @@ con = psycopg2.connect(
 # cursor
 app.debug = True
 cur = con.cursor()
-'''
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ramamunagala:hell@localhost/postgres'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-
-class Staff(db.Model):
-    __tablename = 'Staff'
-
-    staff_id = db.Column(Integer, primary_key=True)
-    job_title = db.Column(db.TEXT)
-    last_name = db.Column(db.TEXT)
-    first_name = db.Column(db.TEXT)
-    gender = db.Column(db.TEXT)
-    middle_name = db.Column(db.TEXT)
-    tenure_time = db.Column(db.TEXT)
-
-    def __init__(self, staff_id, job_title, first_name, last_name, gender, middle_name, tenure_time):
-        self.staff_id = staff_id
-        self.job_title = job_title
-        self.last_name = last_name
-        self.first_name = first_name
-        self.gender = gender
-        self.middle_name = middle_name
-        self.tenure_time = tenure_time
-
-'''
 
 
 @app.route('/')
@@ -72,6 +46,10 @@ def changes():
 def nemp():
     return render_template('nemployee.html')
 
+@app.route('/nshift.html')
+def nshift():
+    return render_template('nshift.html')
+
 
 @app.route('/submitne', methods=['POST'])
 def submitne():
@@ -95,6 +73,31 @@ def submitne():
         print(sid)
         cur.execute("insert into works_within(staff_id,f_id,assignment_name) values(%s,%s,%s)",
                (sid, fid, patient))
+        con.commit()
+        cur.close()
+        return render_template('index.html')
+
+
+@app.route('/submitns', methods=['POST'])
+def submitns():
+    if request.method == 'POST':
+        Last_name = request.form['LastName']
+        FirstName = request.form['FirstName']
+        start = request.form['start']
+        end = request.form['end']
+        dn = request.form['DN']
+        ed = request.form['ed']
+        sd = request.form['sd']
+        cur.execute("select staff_id from staff where last_name = %s and first_name = %s", (Last_name, FirstName))
+        sid = cur.fetchone()[0]
+        print(sid)
+        cur.execute("insert into shifts(end_time,day_or_night,start_time) values(%s,%s,%s)",
+               (end, dn, start))
+        con.commit()
+        cur.execute("select shift_id from shifts where end_time = %s and start_time = %s and day_or_night = %s", (end, start,dn))
+        shid = cur.fetchone()[0]
+        cur.execute("insert into works(shift_id,staff_id,start_date,end_date) values(%s,%s,%s,%s)",
+                    (shid, sid, sd,ed))
         con.commit()
         cur.close()
         return render_template('index.html')
