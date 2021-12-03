@@ -6,7 +6,7 @@ import psycopg2
 app = Flask(__name__)
 con = psycopg2.connect(
     host="localhost",
-    database="postgres",
+    database="cse412_proj",
     user="ramamunagala",
     password="hell")
 
@@ -33,8 +33,9 @@ def submit():
         b=""
         c =""
         d =""
+        e = ""
         query = ""
-        selectq = "SELECT s.first_name,s.last_name,s.job_title,s.tenure_time, s.staff_id, e.net_pay, sh.start_time, sh.end_time,f.facility_name FROM Staff s INNER JOIN earns e ON e.staff_id = s.staff_id INNER JOIN works_within ww ON ww.staff_id = e.staff_id INNER JOIN works w ON w.staff_id = e.staff_id INNER JOIN facility f on f.f_id =ww.f_id INNER JOIN  shifts sh ON sh.shift_id = w.shift_id"
+        selectq = "SELECT s.first_name,s.last_name,s.job_title,s.tenure_time, s.staff_id, e.net_pay,f.facility_name FROM Staff s INNER JOIN earns e ON e.staff_id = s.staff_id INNER JOIN works_within ww ON ww.staff_id = e.staff_id INNER JOIN facility f on f.f_id =ww.f_id"
         if(Last_name):
             count = count +1
             if(i==0):
@@ -48,6 +49,8 @@ def submit():
                     c = Last_name
                 if (count == 4):
                     d = Last_name
+                if (count == 5):
+                    e = Last_name
             i = 1
         if (FirstName):
             count = count + 1
@@ -62,6 +65,8 @@ def submit():
                     c = FirstName
                 if (count == 4):
                     d = FirstName
+                if (count == 5):
+                    e = FirstName
             i = 1
 
         if (JobTitle):
@@ -77,8 +82,25 @@ def submit():
                     c = JobTitle
                 if (count == 4):
                     d = JobTitle
+                if (count == 5):
+                    e = JobTitle
             i = 1
-
+        if (Department):
+            count = count + 1
+            if (i == 0):
+                query = " WHERE f.facility_name = %s"
+                a = Department
+            else:
+                query = query + " AND f.facility_name = %s"
+                if (count == 2):
+                    b = Department
+                if (count == 3):
+                    c = Department
+                if (count == 4):
+                    d = Department
+                if (count == 5):
+                    e = Department
+            i = 1
         if (count == 1):
             cur.execute(selectq+query,(a,))
         if (count == 2):
@@ -88,7 +110,6 @@ def submit():
         if (count == 4):
             cur.execute(selectq+query,(a,b,c,d))
         rows = cur.fetchall()
-
         return render_template('results.html', data=rows)
 
 
@@ -129,7 +150,9 @@ def remployee():
 def rshift():
     return render_template('rshift.html')
 
-
+@app.route('/success.html')
+def success():
+    return render_template('success.html')
 @app.route('/submitne', methods=['POST'])
 def submitne():
     if request.method == 'POST':
@@ -141,9 +164,9 @@ def submitne():
         middle = request.form['middle']
         tenure = request.form['tenure']
         patient = request.form['patient']
-        cur.execute(
-            "insert into staff(job_title,first_name,last_name,gender,middle_name,tenure_time) values(%s,%s,%s,%s,%s,%s)",
-            (JobTitle, FirstName, Last_name, Gender, middle, tenure))
+        shid = request.form['shid']
+        salary = request.form['salary']
+        cur.execute("insert into staff(job_title,first_name,last_name,gender,middle_name,tenure_time) values(%s,%s,%s,%s,%s,%s)",(JobTitle, FirstName, Last_name, Gender, middle, tenure))
         con.commit()
         cur.execute("select f_id from facility where facility_name = %s", (Department,))
         fid = cur.fetchone()[0]
@@ -154,8 +177,16 @@ def submitne():
         cur.execute("insert into works_within(staff_id,f_id,assignment_name) values(%s,%s,%s)",
                     (sid, fid, patient))
         con.commit()
-        cur.close()
-        return render_template('index.html')
+        grossp = str(float(salary) * 1.3)
+        deduct = str(float(salary) * 0.3)
+        date = "1st"
+        cur.execute("insert into salary(payment_date, gross_pay, deductions,net_pay) values( %s, %s, %s,%s)",
+                    (date, grossp, deduct, salary))
+        con.commit()
+        cur.execute("insert into earns(staff_id,net_pay) values(%s,%s) ", (sid, salary))
+        con.commit()
+
+        return render_template('success.html')
 
 
 @app.route('/submitns', methods=['POST'])
@@ -180,8 +211,7 @@ def submitns():
         cur.execute("insert into works(shift_id,staff_id,start_date,end_date) values(%s,%s,%s,%s)",
                     (shid, sid, sd, ed))
         con.commit()
-        cur.close()
-        return render_template('index.html')
+        return render_template('success.html')
 
 
 @app.route('/submitue', methods=['POST'])
@@ -213,8 +243,8 @@ def submitue():
         if (tenure):
             cur.execute("update staff set tenure_time =%s where staff_id=%s ", (tenure, sid))
             con.commit()
-        cur.close()
-        return render_template('index.html')
+
+        return render_template('success.html')
 
 
 @app.route('/submitus', methods=['POST'])
@@ -231,8 +261,7 @@ def submitus():
         con.commit()
         cur.execute("update earns set net_pay =%s where staff_id=%s ", (salary, sid))
         con.commit()
-        cur.close()
-        return render_template('index.html')
+        return render_template('success.html')
 
 @app.route('/submitush', methods=['POST'])
 def submitush():
@@ -252,7 +281,6 @@ def submitush():
         if (end):
             cur.execute("update shifts set end_time =%s where shift_id=%s", (end, sid))
             con.commit()
-        cur.close()
-        return render_template('index.html')
+        return render_template('success.html')
 if __name__ == '__main__':
     app.run()
