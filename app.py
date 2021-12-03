@@ -165,7 +165,6 @@ def submitne():
         middle = request.form['middle']
         tenure = request.form['tenure']
         patient = request.form['patient']
-        shid = request.form['shid']
         salary = request.form['salary']
         cur.execute("insert into staff(job_title,first_name,last_name,gender,middle_name,tenure_time) values(%s,%s,%s,%s,%s,%s)",(JobTitle, FirstName, Last_name, Gender, middle, tenure))
         con.commit()
@@ -193,24 +192,17 @@ def submitne():
 @app.route('/submitns', methods=['POST'])
 def submitns():
     if request.method == 'POST':
-        Last_name = request.form['LastName']
-        FirstName = request.form['FirstName']
+        sid = request.form['sid']
         start = request.form['start']
         end = request.form['end']
         dn = request.form['DN']
         ed = request.form['ed']
         sd = request.form['sd']
-        cur.execute("select staff_id from staff where last_name = %s and first_name = %s", (Last_name, FirstName))
-        sid = cur.fetchone()[0]
-        print(sid)
-        cur.execute("insert into shifts(end_time,day_or_night,start_time) values(%s,%s,%s)",
-                    (end, dn, start))
+        cur.execute("insert into shifts(end_time,day_or_night,start_time) values(%s,%s,%s)",(end, dn, start))
         con.commit()
-        cur.execute("select shift_id from shifts where end_time = %s and start_time = %s and day_or_night = %s",
-                    (end, start, dn))
+        cur.execute("select shift_id from shifts where end_time = %s and start_time = %s and day_or_night = %s",(end, start, dn))
         shid = cur.fetchone()[0]
-        cur.execute("insert into works(shift_id,staff_id,start_date,end_date) values(%s,%s,%s,%s)",
-                    (shid, sid, sd, ed))
+        cur.execute("insert into works(shift_id,staff_id,start_date,end_date) values(%s,%s,%s,%s)",(shid, sid, sd, ed))
         con.commit()
         return render_template('success.html')
 
@@ -306,7 +298,7 @@ def submitrs():
         shid = request.form['shid']
         cur.execute("DELETE FROM  works WHERE works.shift_id = %s", (shid,))
         con.commit()
-        cur.execute("DELETE FROM  shifts WHERE shift.shift_id = %s", (shid,))
+        cur.execute("DELETE FROM  shifts WHERE shifts.shift_id = %s", (shid,))
         con.commit()
         return render_template('success.html',)
 
