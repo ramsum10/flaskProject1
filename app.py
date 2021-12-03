@@ -27,11 +27,66 @@ def submit():
         FirstName = request.form['FirstName']
         Department = request.form['Department']
         JobTitle = request.form['JobTitle']
-        '''
-        found_staff = Staff.query.filter_by(last_name=Last_name, first_name=FirstName).first()
-        '''
+        i = 0
+        count  = 0
+        a =""
+        b=""
+        c =""
+        d =""
+        query = ""
+        selectq = "SELECT s.first_name,s.last_name,s.job_title,s.tenure_time, s.staff_id, e.net_pay, sh.start_time, sh.end_time,f.facility_name FROM Staff s INNER JOIN earns e ON e.staff_id = s.staff_id INNER JOIN works_within ww ON ww.staff_id = e.staff_id INNER JOIN works w ON w.staff_id = e.staff_id INNER JOIN facility f on f.f_id =ww.f_id INNER JOIN  shifts sh ON sh.shift_id = w.shift_id"
+        if(Last_name):
+            count = count +1
+            if(i==0):
+                query = " WHERE s.last_name = %s"
+                a = Last_name
+            else:
+                query = query + " AND s.last_name = %s"
+                if(count == 2):
+                    b = Last_name
+                if (count == 3):
+                    c = Last_name
+                if (count == 4):
+                    d = Last_name
+            i = 1
+        if (FirstName):
+            count = count + 1
+            if (i == 0):
+                query = " WHERE s.first_name = %s"
+                a = FirstName
+            else:
+                query = query + " AND s.first_name = %s"
+                if (count == 2):
+                    b = FirstName
+                if (count == 3):
+                    c = FirstName
+                if (count == 4):
+                    d = FirstName
+            i = 1
 
-        cur.execute("select * from staff where last_name = %s  ", (Last_name,))
+        if (JobTitle):
+            count = count + 1
+            if (i == 0):
+                query = " WHERE s.job_title = %s"
+                a = JobTitle
+            else:
+                query = query + " AND s.first_name = %s"
+                if (count == 2):
+                    b = JobTitle
+                if (count == 3):
+                    c = JobTitle
+                if (count == 4):
+                    d = JobTitle
+            i = 1
+
+        if (count == 1):
+            cur.execute(selectq+query,(a,))
+        if (count == 2):
+            cur.execute(selectq+query,(a,b))
+        if (count == 3):
+            cur.execute(selectq+query,(a,b,c))
+        if (count == 4):
+            cur.execute(selectq+query,(a,b,c,d))
         rows = cur.fetchall()
 
         return render_template('results.html', data=rows)
@@ -65,6 +120,14 @@ def usalary():
 @app.route('/ushift.html')
 def ushift():
     return render_template('ushift.html')
+
+@app.route('/remployee.html')
+def remployee():
+    return render_template('remployee.html')
+
+@app.route('/rshift.html')
+def rshift():
+    return render_template('rshift.html')
 
 
 @app.route('/submitne', methods=['POST'])
