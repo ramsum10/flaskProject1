@@ -6,11 +6,23 @@
 
 </head>
 <body>
-<div id='Results'>
-    {% for data in data %}
-        <p>{{ data }}</p>
+<table>
+    <tr>
+    {% for header in headings %}
+    <th>{{ header }}</th>
     {% endfor %}
-</div>
+  </tr>
+  <tr>
+    {% for row in data %}
+        <tr>
+        {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+  </tr>
+
+</table>
 <form>
  <input type="button" value="Go back!" onclick="history.back()">
 </form>

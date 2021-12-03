@@ -110,7 +110,8 @@ def submit():
         if (count == 4):
             cur.execute(selectq+query,(a,b,c,d))
         rows = cur.fetchall()
-        return render_template('results.html', data=rows)
+        headings = ('First Name','Last Name','Job Title','Tenure','ID','Salary($)','Facility')
+        return render_template('results.html',headings=headings ,data=rows)
 
 
 @app.route('/changes.html')
@@ -282,5 +283,32 @@ def submitush():
             cur.execute("update shifts set end_time =%s where shift_id=%s", (end, sid))
             con.commit()
         return render_template('success.html')
+
+
+
+@app.route('/submitre', methods=['POST'])
+def submitre():
+    if request.method == 'POST':
+        sid = request.form['sid']
+        cur.execute("DELETE FROM  works_within WHERE works_within.staff_id = %s",(sid,))
+        con.commit()
+        cur.execute("DELETE FROM earns WHERE earns.staff_id = %s",(sid,))
+        con.commit()
+        cur.execute("DELETE FROM works WHERE works.staff_id = %s",(sid,))
+        con.commit()
+        cur.execute("DELETE FROM staff WHERE staff.staff_id = %s", (sid,))
+        con.commit()
+        return render_template('success.html', )
+
+@app.route('/submitrs', methods=['POST'])
+def submitrs():
+    if request.method == 'POST':
+        shid = request.form['shid']
+        cur.execute("DELETE FROM  works WHERE works.shift_id = %s", (shid,))
+        con.commit()
+        cur.execute("DELETE FROM  shifts WHERE shift.shift_id = %s", (shid,))
+        con.commit()
+        return render_template('success.html',)
+
 if __name__ == '__main__':
     app.run()
